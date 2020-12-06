@@ -25,7 +25,7 @@ import "./index.css";
 
 const auth = IdentityClient.getInstance();
 const serverOrigin = "https://dev.portal.asgardio.io/t/brionmario";
-const clientHost = origin;
+const clientHost = "https://asgardio-js-oidc-sdk-sample.herokuapp.com";
 
 // Initialize the client
 auth.initialize({
