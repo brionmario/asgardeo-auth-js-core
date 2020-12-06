@@ -37,6 +37,8 @@ auth.initialize({
     storage: Storage.WebWorker
 });
 
+console.log(origin);
+
 ReactDOM.render(
     <React.StrictMode>
         <App />
