@@ -68,6 +68,9 @@
     "webpack-manifest-plugin": "2.2.0",
     "workbox-webpack-plugin": "4.3.1"
   },
+  "engines": {
+    "node": "12.x"
+  },
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
