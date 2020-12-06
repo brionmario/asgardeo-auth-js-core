@@ -24,13 +24,13 @@ import * as serviceWorker from "./serviceWorker";
 import "./index.css";
 
 const auth = IdentityClient.getInstance();
-const serverOrigin = "https://localhost:9443";
+const serverOrigin = "https://dev.portal.asgardio.io/t/brionmario";
 const clientHost = origin;
 
 // Initialize the client
 auth.initialize({
-    baseUrls: [serverOrigin],
-    clientID: "client-id",
+    baseUrls: [ serverOrigin ],
+    clientID: "8ArfnSYzSDxDR3cPDFy1lo2r1rEa",
     serverOrigin: serverOrigin,
     signInRedirectURL: clientHost + "/sign-in",
     signOutRedirectURL: clientHost + "/dashboard",
