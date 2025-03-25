@@ -104,6 +104,7 @@ export class AsgardeoAuthClient<T> {
         cryptoUtils: CryptoUtils,
         instanceID?: number
     ): Promise<void> {
+        console.log("AUTH JS: Initializing the SDK with the config data.", config);
         const clientId: string = config.clientID;
 
         if (!AsgardeoAuthClient._instanceID) {
