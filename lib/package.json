@@ -1,6 +1,6 @@
 {
     "name": "@brionmario-experimental/asgardeo-auth-js",
-    "version": "5.2.7",
+    "version": "5.2.8",
     "description": "Asgardeo Auth JS SDK to be used in JavaScript and TypeScript applications.",
     "keywords": [
         "Asgardeo",
