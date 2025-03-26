@@ -104,7 +104,7 @@ export class AsgardeoAuthClient<T> {
         cryptoUtils: CryptoUtils,
         instanceID?: number
     ): Promise<void> {
-        console.log("AUTH JS: Initializing the SDK with the config data.", config);
+        console.log("AUTH JS:::client.ts -> Initializing the SDK with the config data.", config);
         const clientId: string = config.clientID;
 
         if (!AsgardeoAuthClient._instanceID) {
@@ -119,8 +119,10 @@ export class AsgardeoAuthClient<T> {
 
         if (!clientId) {
             this._dataLayer = new DataLayer<T>(`instance_${ AsgardeoAuthClient._instanceID }`, store);
+            console.log("AUTH JS:::client.ts -> Data layer created with the default client ID.");
         } else {
             this._dataLayer = new DataLayer<T>(`instance_${ AsgardeoAuthClient._instanceID }-${ clientId }`, store);
+            console.log("AUTH JS:::client.ts -> Data layer created with the provided client ID.");
         }
 
         this._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
@@ -134,6 +136,8 @@ export class AsgardeoAuthClient<T> {
                 ...(config.scope?.filter((scope: string) => !DefaultConfig?.scope?.includes(scope)) ?? [])
             ]
         });
+        
+        console.log("AUTH JS:::client.ts -> SDK initialized with the config data.");
     }
 
     /**
