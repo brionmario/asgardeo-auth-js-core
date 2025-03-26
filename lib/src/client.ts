@@ -62,7 +62,7 @@ export class AsgardeoAuthClient<T> {
     private static _instanceID: number;
     static _authenticationCore: any;
     private static _instanceDedupeCounter: number = 0;
-    private static _initQueue: Promise<void>[] = [];
+    private static _initQueue: any = [];
 
     /**
      * This is the constructor method that returns an instance of the .
