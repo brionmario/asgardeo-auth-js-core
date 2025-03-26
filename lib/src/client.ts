@@ -62,7 +62,7 @@ export class AsgardeoAuthClient<T> {
     private static _instanceID: number;
     static _authenticationCore: any;
     private static _instanceDedupeCounter: number = 0;
-    private static _initQueue: Promise<void> | null = null;
+    private static _initQueue: Promise<void>[] = [];
 
     /**
      * This is the constructor method that returns an instance of the .
@@ -108,12 +108,32 @@ export class AsgardeoAuthClient<T> {
     ): Promise<void> {
         console.log("AUTH JS:::client.ts -> Instance Count.", AsgardeoAuthClient._instanceDedupeCounter);
     
-        if (AsgardeoAuthClient._initQueue) {
-            console.log("AUTH JS::: Initialization already in progress. Waiting...");
-            return AsgardeoAuthClient._initQueue;
+        // If there is an ongoing initialization, push the current promise to the queue
+        if (AsgardeoAuthClient._initQueue.length > 0) {
+            console.log("AUTH JS::: Initialization already in progress. Adding to queue...");
+            return new Promise<void>((resolve, reject) => {
+                AsgardeoAuthClient._initQueue.push({
+                    config,
+                    store,
+                    cryptoUtils,
+                    instanceID,
+                    resolve,
+                    reject
+                });
+            });
         }
     
-        AsgardeoAuthClient._initQueue = (async () => {
+        // If no initialization is in progress, start the current one
+        AsgardeoAuthClient._initQueue.push({
+            config,
+            store,
+            cryptoUtils,
+            instanceID,
+            resolve: () => {},
+            reject: () => {}
+        });
+    
+        const executeInitialization = async () => {
             try {
                 AsgardeoAuthClient._instanceDedupeCounter++;
                 console.log("AUTH JS:::client.ts -> Initializing the SDK with the config data.", config);
@@ -141,30 +161,33 @@ export class AsgardeoAuthClient<T> {
                 this._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
                 AsgardeoAuthClient._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
     
-                try {
-                    await this._dataLayer.setConfigData({
-                        ...DefaultConfig,
-                        ...config,
-                        scope: [
-                            ...(DefaultConfig.scope ?? []),
-                            ...(config.scope?.filter((scope: string) => !DefaultConfig?.scope?.includes(scope)) ?? [])
-                        ]
-                    });
-                } catch (error) {
-                    console.error("AUTH JS::: Failed to set the config data in the data layer.", error);
-                    throw error;
-                }
+                await this._dataLayer.setConfigData({
+                    ...DefaultConfig,
+                    ...config,
+                    scope: [
+                        ...(DefaultConfig.scope ?? []),
+                        ...(config.scope?.filter((scope: string) => !DefaultConfig?.scope?.includes(scope)) ?? [])
+                    ]
+                });
     
                 console.log("AUTH JS:::client.ts -> SDK initialized with the config data.");
             } catch (error) {
                 console.error("AUTH JS::: Initialization failed:", error);
                 throw error;
             } finally {
-                AsgardeoAuthClient._initQueue = null;
-            }
-        })();
+                // After initialization, remove the processed task from the queue
+                AsgardeoAuthClient._initQueue.shift();
     
-        return AsgardeoAuthClient._initQueue;
+                // If there are more tasks in the queue, execute the next one
+                if (AsgardeoAuthClient._initQueue.length > 0) {
+                    const nextTask: any = AsgardeoAuthClient._initQueue[0];
+                    await this.initialize(nextTask.config, nextTask.store, nextTask.cryptoUtils, nextTask.instanceID);
+                }
+            }
+        };
+    
+        // Execute the initialization process
+        await executeInitialization();
     }
 
     /**
