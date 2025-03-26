@@ -141,14 +141,19 @@ export class AsgardeoAuthClient<T> {
                 this._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
                 AsgardeoAuthClient._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
     
-                await this._dataLayer.setConfigData({
-                    ...DefaultConfig,
-                    ...config,
-                    scope: [
-                        ...(DefaultConfig.scope ?? []),
-                        ...(config.scope?.filter((scope: string) => !DefaultConfig?.scope?.includes(scope)) ?? [])
-                    ]
-                });
+                try {
+                    await this._dataLayer.setConfigData({
+                        ...DefaultConfig,
+                        ...config,
+                        scope: [
+                            ...(DefaultConfig.scope ?? []),
+                            ...(config.scope?.filter((scope: string) => !DefaultConfig?.scope?.includes(scope)) ?? [])
+                        ]
+                    });
+                } catch (error) {
+                    console.error("AUTH JS::: Failed to set the config data in the data layer.", error);
+                    throw error;
+                }
     
                 console.log("AUTH JS:::client.ts -> SDK initialized with the config data.");
             } catch (error) {
