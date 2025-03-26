@@ -106,8 +106,9 @@ export class AsgardeoAuthClient<T> {
         instanceID?: number
     ): Promise<void> {
         console.log("AUTH JS:::client.ts -> Instance Count.", AsgardeoAuthClient._instanceDedupeCounter);
+        AsgardeoAuthClient._instanceDedupeCounter++;
         console.log("AUTH JS:::client.ts -> Initializing the SDK with the config data.", config);
-        const clientId: string = `${AsgardeoAuthClient._instanceDedupeCounter++}___${ config.clientID }`;
+        const clientId: string = config.clientID;
 
         if (!AsgardeoAuthClient._instanceID) {
             AsgardeoAuthClient._instanceID = 0;
