@@ -62,6 +62,7 @@ export class AsgardeoAuthClient<T> {
     private static _instanceID: number;
     static _authenticationCore: any;
     private static _instanceDedupeCounter: number = 0;
+    private static _initializing: boolean = false;
 
     /**
      * This is the constructor method that returns an instance of the .
@@ -105,6 +106,12 @@ export class AsgardeoAuthClient<T> {
         cryptoUtils: CryptoUtils,
         instanceID?: number
     ): Promise<void> {
+        if (AsgardeoAuthClient._initializing) {
+            console.log("AUTH JS::: Already initializing, skipping duplicate call.");
+            return;
+        }
+        AsgardeoAuthClient._initializing = true;
+
         console.log("AUTH JS:::client.ts -> Instance Count.", AsgardeoAuthClient._instanceDedupeCounter);
         AsgardeoAuthClient._instanceDedupeCounter++;
         console.log("AUTH JS:::client.ts -> Initializing the SDK with the config data.", config);
