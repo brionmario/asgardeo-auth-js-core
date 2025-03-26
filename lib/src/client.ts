@@ -62,7 +62,7 @@ export class AsgardeoAuthClient<T> {
     private static _instanceID: number;
     static _authenticationCore: any;
     private static _instanceDedupeCounter: number = 0;
-    private static _initializing: boolean = false;
+    private static _initQueue: Promise<void> | null = null;
 
     /**
      * This is the constructor method that returns an instance of the .
@@ -106,48 +106,60 @@ export class AsgardeoAuthClient<T> {
         cryptoUtils: CryptoUtils,
         instanceID?: number
     ): Promise<void> {
-        if (AsgardeoAuthClient._initializing) {
-            console.log("AUTH JS::: Already initializing, skipping duplicate call.");
-            return;
-        }
-        AsgardeoAuthClient._initializing = true;
-
         console.log("AUTH JS:::client.ts -> Instance Count.", AsgardeoAuthClient._instanceDedupeCounter);
-        AsgardeoAuthClient._instanceDedupeCounter++;
-        console.log("AUTH JS:::client.ts -> Initializing the SDK with the config data.", config);
-        const clientId: string = config.clientID;
-
-        if (!AsgardeoAuthClient._instanceID) {
-            AsgardeoAuthClient._instanceID = 0;
-        } else {
-            AsgardeoAuthClient._instanceID += 1;
+    
+        if (AsgardeoAuthClient._initQueue) {
+            console.log("AUTH JS::: Initialization already in progress. Waiting...");
+            return AsgardeoAuthClient._initQueue;
         }
-
-        if (instanceID) {
-            AsgardeoAuthClient._instanceID = instanceID;
-        }
-
-        if (!clientId) {
-            this._dataLayer = new DataLayer<T>(`instance_${ AsgardeoAuthClient._instanceID }`, store);
-            console.log("AUTH JS:::client.ts -> Data layer created with the default client ID.");
-        } else {
-            this._dataLayer = new DataLayer<T>(`instance_${ AsgardeoAuthClient._instanceID }-${ clientId }`, store);
-            console.log("AUTH JS:::client.ts -> Data layer created with the provided client ID.");
-        }
-
-        this._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
-        AsgardeoAuthClient._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
-
-        await this._dataLayer.setConfigData({
-            ...DefaultConfig,
-            ...config,
-            scope: [
-                ...(DefaultConfig.scope ?? []),
-                ...(config.scope?.filter((scope: string) => !DefaultConfig?.scope?.includes(scope)) ?? [])
-            ]
-        });
-        
-        console.log("AUTH JS:::client.ts -> SDK initialized with the config data.");
+    
+        AsgardeoAuthClient._initQueue = (async () => {
+            try {
+                AsgardeoAuthClient._instanceDedupeCounter++;
+                console.log("AUTH JS:::client.ts -> Initializing the SDK with the config data.", config);
+    
+                const clientId: string = config.clientID;
+    
+                if (!AsgardeoAuthClient._instanceID) {
+                    AsgardeoAuthClient._instanceID = 0;
+                } else {
+                    AsgardeoAuthClient._instanceID += 1;
+                }
+    
+                if (instanceID) {
+                    AsgardeoAuthClient._instanceID = instanceID;
+                }
+    
+                if (!clientId) {
+                    this._dataLayer = new DataLayer<T>(`instance_${AsgardeoAuthClient._instanceID}`, store);
+                    console.log("AUTH JS:::client.ts -> Data layer created with the default client ID.");
+                } else {
+                    this._dataLayer = new DataLayer<T>(`instance_${AsgardeoAuthClient._instanceID}-${clientId}`, store);
+                    console.log("AUTH JS:::client.ts -> Data layer created with the provided client ID.");
+                }
+    
+                this._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
+                AsgardeoAuthClient._authenticationCore = new AuthenticationCore(this._dataLayer, cryptoUtils);
+    
+                await this._dataLayer.setConfigData({
+                    ...DefaultConfig,
+                    ...config,
+                    scope: [
+                        ...(DefaultConfig.scope ?? []),
+                        ...(config.scope?.filter((scope: string) => !DefaultConfig?.scope?.includes(scope)) ?? [])
+                    ]
+                });
+    
+                console.log("AUTH JS:::client.ts -> SDK initialized with the config data.");
+            } catch (error) {
+                console.error("AUTH JS::: Initialization failed:", error);
+                throw error;
+            } finally {
+                AsgardeoAuthClient._initQueue = null;
+            }
+        })();
+    
+        return AsgardeoAuthClient._initQueue;
     }
 
     /**
